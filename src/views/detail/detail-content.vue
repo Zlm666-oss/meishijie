@@ -1,13 +1,50 @@
 <template>
-  
+  <section class="detail-content">
+    <div class="detail-materials">
+      <p class=""><strong>“</strong>这道菜的描述<strong>”</strong></p>
+      <h2>用料</h2>
+      <div class="detail-materials-box clearfix">
+        <h3>主料</h3>
+        <ul>
+          <li class="" v-for="item in info.raw_material.main_material" :key="item._id">
+            {{item.name}}
+            <span>{{item.specs}}</span>
+          </li>
+        </ul>
+      </div>
+      <div class="detail-materials-box clearfix">
+        <h3>辅料</h3>
+        <ul>
+          <li class="" v-for="item in info.raw_material.accessories_material" :key="item._id">
+            {{item.name}}
+            <span>{{item.specs}}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="detail-explain">
+      <h2>{{info.title}}的做法</h2>
+      <section class="detail-section clearfix" v-for="(item,index) in info.steps" :key="index">
+        <em class="detail-number">{{index+1}}.</em>
+        <div class="detail-explain-desc" >
+          <p>{{item.describe}}</p>
+          <img class="conimg" :src="item.img_url" alt="">
+        </div>
+      </section>
+      <div class="skill">
+        <h2>烹饪技巧</h2>
+        <p>{{info.skill}}</p>
+      </div>
+    </div>
+  </section>
 </template>
 <script>
 export default {
   name: 'DetailContent',
   props:{
-   info: {
-      type: Object,
-      default: () => ({})
+    info:{
+      type:Object,
+      default:()=>{}
     }
   }
 }
@@ -87,4 +124,4 @@ export default {
         padding-left 100px
         padding-top 10px
 </style>
- 
+

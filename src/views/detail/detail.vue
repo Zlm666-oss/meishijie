@@ -1,8 +1,8 @@
 <template>
   <div class="menu-detail">
-    <detail-header :info="menuInfo"></detail-header>
-    <detail-content :info="menuInfo"></detail-content>
-    <Comment :info="menuInfo"></Comment>
+    <detail-header :info='info'></detail-header>
+    <detail-content :info='info'></detail-content>
+    <Comment :info='info'></Comment>
   </div>
 </template>
 <script>
@@ -14,37 +14,25 @@ export default {
   components: {DetailHeader, DetailContent, Comment},
   data(){
     return {
-      menuInfo:{
-        userInfo:{}, 
+      info:{
+        properties_show:{},
         raw_material:{
-        main_material:[],
-        accessories_material:[]
+          accessories_material:{},
+          main_material:{}
         },
-        steps:[]
-      } //接收菜谱的详细信息
+        userInfo:{}
+      }
     }
   },
   watch:{
     $route:{
-      handler(){
-          let {menuId} = this.$route.query;
-          if(menuId){//发送请求
-          menuInfo({menuId}).then(({data}) =>{
-          console.log(data)
-          //  返回值有两种 true：   未收藏转已收藏
-                      // false：   
-          this.menuInfo = data.info;
-        })
-          }else{
-            this.$message({
-              message:"重进",
-              type:"warrning"
-            })
-          }
+      async handler(value){
+        const {menuId}=value.query
+        const {data}=await menuInfo({menuId})
+        this.info=data.info
       },
       immediate:true
-      }
+    }
   }
 }
 </script>
-

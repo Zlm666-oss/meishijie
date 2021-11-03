@@ -1,39 +1,112 @@
 <template>
-<!-- userInfo.avatar -->
   <div class="space">
     <h2>欢迎来到我的美食空间</h2>
-    
- 
+    <div class="user-info">
+      <div class="user-avatar">
+        <img :src="userInfo.avatar" alt="">
+      </div>
+      <div class="user-main">
+        <h1>{{userInfo.name}}</h1>
+        <span class="info">
+          <em>{{userInfo.createdAt}}加入美食杰</em>
+          |
+          <router-link :to="{name:'edit'}" v-if="isOwner">编辑个人资料</router-link>
+        </span>
+        <div class="tools" v-if="!isOwner">
+          <!-- follow-at  no-follow-at-->
+				  <a href="javascript:;" class="follow-at"
+            :class="{'no-follow-at':userInfo.isFollowing}"
+            @click="toggleHandler"
+          >
+            {{userInfo.isFollowing ? '已关注':'未关注'}}
+          </a>
+        </div>
+      </div>
+
+      <ul class="user-more-info">
+        <li>
+          <div>
+            <span>关注</span>
+            <strong>{{userInfo.following_len}}</strong>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span>粉丝</span>
+            <strong>{{userInfo.follows_len}}</strong>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span>收藏</span>
+            <strong>{{userInfo.collections_len}}</strong>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span>发布菜谱</span>
+            <strong>{{userInfo.work_menus_len}}</strong>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+
+    <!-- v-model="activeName" -->
+    <el-tabs class="user-nav"
+       v-model="activeName"
+       @tab-click="tabClickHandler"
+     >
+      <el-tab-pane label="作品" name="works"></el-tab-pane>
+      <el-tab-pane label="粉丝" name="fans"></el-tab-pane>
+      <el-tab-pane label="关注" name="following"></el-tab-pane>
+      <el-tab-pane label="收藏" name="collection"></el-tab-pane>
+    </el-tabs>
+
+
+    <div class="user-info-show">
+      <!-- 作品 & 收藏 布局 -->
+      <!-- <menu-card :margin-left="13"></menu-card> -->
+      <!-- 粉丝 & 关注 布局 -->
+      <!-- <Fans></Fans> -->
+      <router-view :info="list" :activeName="activeName"></router-view>
+    </div>
   </div>
 </template>
 <script>
 import {userInfo, toggleFollowing, getMenus, following, fans, collection} from '@/service/api';
- 
 const getOtherInfo = {
-  async works(params){
-    let data = (await getMenus(params)).data;
-    data.flag = 'works'
-    return data;
-  },
- 
-  async following(params){
-    let data = (await following(params)).data;
-    data.flag = 'following'
-    return data;
-  },
- 
-  async fans(params){
-    let data = (await fans(params)).data;
-    data.flag = 'fans'
-    return data;
-  },
- 
-  async collection(params){
-   let data = (await collection(params)).data;
-    data.flag = 'collection'
-    return data;
-  }
+   async works(params){
+     let data =(await getMenus(params)).data;
+     data.flag='works';
+     return data
+    },
+
+    async following(params){
+      let data =(await following(params)).data;
+     data.flag='following';
+     return data
+    },
+
+     async fans(params){
+     let data=(await fans(params)).data;
+     data.flag='fans';
+     return data
+    },
+
+     async collection(params){
+     let data =(await collection(params)).data;
+     data.flag='collection';
+     return data
+    }
 }
+// 总体思路
+// 1.显示别人的空间
+//  a.地址栏中如有userid 则显示对应的用户数据
+// 2.显示自身空间
+    // a.如果没有userid  则默认显示自己信息
+    // b.如果在菜谱中 点击自己 也是有userid传递
+    //c.通过判断是否为自己的 如果是，不需要后端拿,登录时，个人信息
 export default {
   name: 'Space',
   data(){
@@ -44,73 +117,59 @@ export default {
       list:[]
     }
   },
- 
   watch:{
-    // 监听路由变化，来判断路由是否有信息，从而分辨是否为自己的空间
+    // 监听路由变化，判断路由当中是否有信息，而分辨是否是自己的空间
     $route:{
       async handler(){
-        //来判断路由是否有信息
-        let {userId} = this.$route.query;
-        this.isOwner = !userId || userId === this.$store.state.userInfo.userId;
-        if(this.isOwner){//当前登录的用户
-          this.userInfo = this.$store.state.userInfo;
+        // 判断路由是否有信息
+        let {userId} =this.$route.query;
+        this.isOwner=!userId || userId==this.$store.state.userId
+        if(this.isOwner){//判断当前登录的用户
+          this.userInfo=this.$store.state.userInfo;
         }else{
-          const {data} = await userInfo({userId});
-          this.userInfo = data
+          const {data}=await userInfo({userId})
+          this.userInfo=data;
         }
         // console.log(this.userInfo)
-        //可以留存上一次tab的访问信息
-        this.activeName = this.$route.name
-        this.getInfo()
+        //可以留存上一次tad的访问信息
+        this.activeName=this.$route.name;
+        // console.log(this.activeName)
+        this.getInfo();
       },
       immediate:true
     }
   },
   methods:{
-    async toggleHandler(){
-      const {data} = await toggleFollowing({followUserId:this.userInfo.userId});
-      // console.log(data)
-      this.userInfo = data;
+   async toggleHandler(){
+     const {data}=await toggleFollowing({followUserId:this.userInfo.userId})
+    //  console.log(data)
+     this.userInfo=data;
     },
     tabClickHandler(){
-      // console.log(this.activeName)
-      //在切换tab时会发生key重复的问题，在每次切换tab之前，先去清空数据
-      //问题：给后端传递的参数被覆盖（query中的）
-     
-      if(this.activeName){
-        this.$router.push({
-          name:this.activeName,
-          query:{
-            ...this.$route.query
-          }
-        })
-      }else{
-        this.list = [];
-        this.$router.push({
-          name:this.activeName,
-          query:{
-            ...this.$route.query
-          }
-        })
-      }
+      //问题，在切换tab时，会发生key值重复问题，在每次切换tab之前，先清空数据
+      this.list=[];
+      //问题：给后端传输数据
+      this.$router.push({
+        name:this.activeName,
+        query:{
+          ...this.$route.query
+        }
+      })
     },
- 
-    //调用封装的请求
     async getInfo(){
- 
- 
       let data = await getOtherInfo[this.activeName]({userId:this.userInfo.userId})
-      //给组件赋值
+      // console.log(data)
       if(this.activeName === data.flag){
-        this.list = data.list;
+        this.list=data.list
       }
-      
+     
     }
-    
-  } 
+
+  }
 }
 </script>
- 
+
+
 <style lang="stylus">
 .space
   
@@ -176,14 +235,14 @@ export default {
           box-shadow 0px 0px 6px rgba(0,0,0,0.05) inset
           border-radius 32px
           border-bottom-right-radius 0
- 
+
           span 
             color #999
             line-height 20px
             display block
             padding-left 14px
             padding-top 14px
- 
+
           strong 
             display block
             font-size 18px
@@ -191,7 +250,7 @@ export default {
             font-family Microsoft Yahei
             padding-left 14px
             line-height 32px
- 
+
   .user-nav
     margin 20px 0 20px 0
   .user-info-show
@@ -225,4 +284,4 @@ export default {
   .el-tabs__nav-wrap::after
     background-color: transparent;
 </style>
- 
+
